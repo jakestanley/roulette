@@ -1,68 +1,74 @@
 package uk.co.jakestanley.services;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.stereotype.Service;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j;
 import uk.co.jakestanley.exceptions.RouletteGameException;
 
+@Log4j
 @Service
 public class RouletteService {
 	
 	public static final int NUMBERS = 37;
 	public static final int MAX_PAYOUT = 360;
 	
-	@Getter
-	public enum BetType {
-		
-		ODD(1, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36),
-		EVEN(1, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35);
-		
-		private final int 			payout;
-		private final Set<Integer>  numbers;
-		
-		BetType(int payout, Integer... numbers) {
-			this.payout = payout;
-			this.numbers = Arrays.asList(numbers).stream().collect(Collectors.toSet());
-		}
+	public enum BetResult {
+		WON,
+		LOST
 	}
 	
-	public int placeBet(int number) throws RouletteGameException {
+	@Getter
+	public enum BetType {
+		ODD, EVEN
+	}
+	
+	public BetResult placeBet(int bet) throws RouletteGameException {
 
-		if(number >= 37 || number < 0) {
+		log.info("Bet is " + bet);
+		
+		if((bet > 36) || (bet < 0)) {
 			throw new RouletteGameException("Placed bet cannot be less than zero or greater than 36");
 		}
 
 		int spin = spin();
-		
-		if (number == spin) {
-			return MAX_PAYOUT;
+
+		if (bet == spin) {
+			return BetResult.WON;
+		} else {
+			return BetResult.LOST;
 		}
-		
-		return 0;
 	}
 	
-	public int placeBet(BetType type) throws RouletteGameException {
+	public BetResult placeBet(BetType type) throws RouletteGameException {
 
-		if(type != BetType.ODD && type != BetType.EVEN) {
-			throw new RouletteGameException("Unsupported bet type");
-		}
-
-		Integer spin = spin();
+		int spin = spin();
+		BetResult br = BetResult.LOST;
 		
-		if(type.getNumbers().contains(spin)) {
-			return type.payout;
+		switch(type) {
+			case ODD:
+				if(spin % 2 == 1) {
+					br = BetResult.WON;
+				}
+				break;
+			case EVEN:
+				if(spin % 2 == 0) {
+					br = BetResult.WON;
+				}
+				break;
+			default:
+				throw new RouletteGameException("Unsupported bet type");
 		}
 
-		return 0;
-
+		return br;
 	}
 	
-	private int spin() {
+	/**
+	 * Returns a random number from zero to 36
+	 * @return
+	 */
+	public int spin() {
 		return RandomUtils.nextInt(NUMBERS);
 	}
 

@@ -1,10 +1,13 @@
 package uk.co.jakestanley.exceptions;
 
-import lombok.NoArgsConstructor;
-
 public class RouletteGameException extends Exception {
 
-    public RouletteGameException (String message){
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -1186565876612442062L;
+
+	public RouletteGameException(String message) {
         super(message);
     }
     
